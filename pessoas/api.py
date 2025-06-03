@@ -59,12 +59,12 @@ def criar_uma_pessoa(request, data: PessoaIn):
 
 # atualizar
 @api.put("pessoas/{pessoa_id}/", 
-         response=PessoaOut, 
+         response={200: PessoaOut, 404: ErrorSchema}, 
          tags=["Pessoas"],
          description="Substituir os dados duma pessoa")
 def atualizar_uma_pessoa(request, pessoa_id: int, data: PessoaIn):
     pessoa = Pessoa.objects.filter(id=pessoa_id).update(**data.dict())   # update é de QuerySet, pelo que devemos usar filter
-    return Pessoa.objects.get(id=pessoa_id)
+    return 200, Pessoa.objects.get(id=pessoa_id)
 
 
 # apagar
