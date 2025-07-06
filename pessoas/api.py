@@ -1,81 +1,44 @@
 from django.shortcuts import get_object_or_404
-from ninja import NinjaAPI, Query
+from ninja import NinjaAPI
 from .models import Pessoa
-from .schemas import PessoaIn, PessoaOut, ErrorSchema
-from typing import List, Optional
+from .schemas import PessoaIn, PessoaOut
+from typing import List
 
-api = NinjaAPI(
-    title="API RESTful Pessoas",
-    description="API para gestão de pessoas com operações completas sobre os dados.",
-    version="1.0.0",
-    urls_namespace='pessoas'
-)
+api = NinjaAPI()
 
-
-# listar
-@api.get("pessoas/", 
-         response={200: List[PessoaOut]}, 
-         tags=["Pessoas"], 
-         description="Lista todas as pessoas")
-def listar_pessoas(request,  
-                 sort: str = None, 
-                 idade: int = None,
-                 nome: str = None,
-                 offset: int = 0,
-                 limit: int = 3 ):
-    
-    pessoas = Pessoa.objects.all()[offset:offset+limit]
-    
-    if idade:
-        pessoas = pessoas.filter(idade=idade)
-
-    if nome:
-        pessoas = pessoas.filter(nome__icontains=nome)
-
-    if sort in ('nome', 'idade', '-nome', '-idade'):
-        pessoas.order_by(sort)
-    
-    return 200, pessoas
+# LISTAR
+@api.get("pessoas/", response=List[PessoaOut])
+def listar_pessoas(request):
+    return Pessoa.objects.all()
 
 
-# ver um
-@api.get("pessoas/{pessoa_id}/", 
-         response={200: PessoaOut}, 
-         tags=["Pessoas"],
-         description="Ver dados de uma pessoa"
-         )
-def ver_uma_pessoa(request, pessoa_id:int):
-    return 200, get_object_or_404(Pessoa, id=pessoa_id)
-    
+# VER UMA
+@api.get("pessoas/{id}/", response=PessoaOut)
+def ver_uma_pessoa(request, id: int):
+    pessoa = get_object_or_404(Pessoa, id=id)
+    return pessoa
 
-# criar
-@api.post("pessoas/", 
-          response={201: PessoaOut}, 
-          tags=["Pessoas"],
-          description="Criar uma nova pessoa")
+
+# CRIAR
+@api.post("pessoas/", response=PessoaOut)
 def criar_uma_pessoa(request, data: PessoaIn):
-    return 201, Pessoa.objects.create(**data.dict())
+    pessoa = Pessoa.objects.create(**data.dict())
+    return 201, pessoa
 
 
-# atualizar
-@api.put("pessoas/{pessoa_id}/", 
-         response={200: PessoaOut, 404: ErrorSchema}, 
-         tags=["Pessoas"],
-         description="Substituir os dados duma pessoa")
-def atualizar_uma_pessoa(request, pessoa_id: int, data: PessoaIn):
-    pessoa = Pessoa.objects.filter(id=pessoa_id).update(**data.dict())   # update é de QuerySet, pelo que devemos usar filter
-    return 200, Pessoa.objects.get(id=pessoa_id)
+# ATUALIZAR
+@api.put("pessoas/{id}/", response=PessoaOut)
+def atualizar_uma_pessoa(request, id: int, data: PessoaIn):
+    pessoa = get_object_or_404(Pessoa, id=id)
+    for attr, value in data.dict().items():
+        setattr(pessoa, attr, value)
+    pessoa.save()
+    return pessoa
 
 
-# apagar
-@api.delete("pessoas/{pessoa_id}/", 
-         response={204: None, 404: ErrorSchema}, 
-         tags=["Pessoas"],
-         description="Apagar uma pessoa")
-def apagar_uma_pessoa(request, pessoa_id: int):
-
-    pessoa = get_object_or_404(Pessoa, id=pessoa_id)
+# APAGAR
+@api.delete("pessoas/{id}/")
+def apagar_uma_pessoa(request, id: int):
+    pessoa = get_object_or_404(Pessoa, id=id)
     pessoa.delete()
     return 204, None
-
-
