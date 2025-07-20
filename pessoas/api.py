@@ -1,6 +1,6 @@
 from ninja import NinjaAPI
-from pessoas.models import Pessoa
-from pessoas.schemas import PessoaOut, PessoaIn, ErrorSchema
+from .models import Pessoa
+from .schemas import PessoaIn, PessoaOut, ErrorSchema
 from typing import List
 from django.shortcuts import get_object_or_404
 
