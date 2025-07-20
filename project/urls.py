@@ -2,10 +2,11 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-
+from pessoas.api import api as pessoas_api
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', pessoas_api.urls)
 ]
 
 urlpatterns += static(
